@@ -30,8 +30,8 @@ def _parse_int_id(value, field_name: str) -> int:
 def _check_overlap(room_id: int, start: date, end: date, exclude_id: int | None = None):
     query = Booking.query.filter(
         Booking.room_id == room_id,
-        Booking.start_date <= end,
-        Booking.end_date >= start,
+        Booking.start_date < end,
+        Booking.end_date > start,
     )
     if exclude_id:
         query = query.filter(Booking.id != exclude_id)
@@ -55,8 +55,8 @@ def create_booking():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 422
 
-    if end < start:
-        return jsonify({"error": "'end_date' must be on or after 'start_date'."}), 422
+    if end <= start:
+        return jsonify({"error": "'end_date' must be after 'start_date'."}), 422
 
     room = Room.query.filter_by(id=room_id).with_for_update().first()
     if not room:
