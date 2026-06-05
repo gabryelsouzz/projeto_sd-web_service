@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import SQLAlchemyError
 from app.database import db
@@ -7,11 +7,17 @@ from app.models import Booking, Room, User
 bookings_bp = Blueprint("bookings", __name__, url_prefix="/bookings")
 
 
-def _parse_date(value: str, field_name: str) -> date:
+def _parse_datetime(value: str, field_name: str) -> datetime:
     try:
-        return date.fromisoformat(value)
+        dt = datetime.fromisoformat(value)
     except (ValueError, TypeError):
-        raise ValueError(f"'{field_name}' must be a valid date in YYYY-MM-DD format.")
+        raise ValueError(
+            f"'{field_name}' must be a valid ISO 8601 datetime "
+            f"(e.g. 2026-06-05T14:00:00)."
+        )
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 def _parse_int(value, field_name: str) -> int:
@@ -27,7 +33,7 @@ def _parse_int(value, field_name: str) -> int:
     raise ValueError(f"'{field_name}' must be an integer.")
 
 
-def _check_overlap(room_id: int, start: date, end: date, exclude_id: int | None = None):
+def _check_overlap(room_id: int, start: datetime, end: datetime, exclude_id: int | None = None):
     query = Booking.query.filter(
         Booking.room_id == room_id,
         Booking.start_date < end,
@@ -50,8 +56,8 @@ def create_booking():
     try:
         room_id = _parse_int(data["room_id"], "room_id")
         user_id = _parse_int(data["user_id"], "user_id")
-        start = _parse_date(data["start_date"], "start_date")
-        end = _parse_date(data["end_date"], "end_date")
+        start = _parse_datetime(data["start_date"], "start_date")
+        end = _parse_datetime(data["end_date"], "end_date")
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 422
 
