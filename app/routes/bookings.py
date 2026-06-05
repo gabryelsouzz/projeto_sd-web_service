@@ -13,6 +13,19 @@ def _parse_date(value: str, field_name: str) -> date:
         raise ValueError(f"'{field_name}' must be a valid date in YYYY-MM-DD format.")
 
 
+def _parse_int_id(value, field_name: str) -> int:
+    if isinstance(value, bool):
+        raise ValueError(f"'{field_name}' must be an integer.")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            pass
+    raise ValueError(f"'{field_name}' must be an integer.")
+
+
 def _check_overlap(room_id: int, start: date, end: date, exclude_id: int | None = None):
     query = Booking.query.filter(
         Booking.room_id == room_id,
@@ -34,6 +47,8 @@ def create_booking():
         return jsonify({"error": f"Missing required fields: {', '.join(missing)}."}), 400
 
     try:
+        room_id = _parse_int_id(data["room_id"], "room_id")
+        user_id = _parse_int_id(data["user_id"], "user_id")
         start = _parse_date(data["start_date"], "start_date")
         end = _parse_date(data["end_date"], "end_date")
     except ValueError as exc:
@@ -42,13 +57,13 @@ def create_booking():
     if end < start:
         return jsonify({"error": "'end_date' must be on or after 'start_date'."}), 422
 
-    room = Room.query.filter_by(id=data["room_id"]).with_for_update().first()
+    room = Room.query.filter_by(id=room_id).with_for_update().first()
     if not room:
-        return jsonify({"error": f"Room {data['room_id']} not found."}), 404
+        return jsonify({"error": f"Room {room_id} not found."}), 404
 
-    user = db.session.get(User, data["user_id"])
+    user = db.session.get(User, user_id)
     if not user:
-        return jsonify({"error": f"User {data['user_id']} not found."}), 404
+        return jsonify({"error": f"User {user_id} not found."}), 404
 
     if _check_overlap(room.id, start, end):
         return jsonify({"error": "Room is already booked for part or all of that date range."}), 409
