@@ -1,5 +1,6 @@
 from datetime import date
 from flask import Blueprint, request, jsonify
+from sqlalchemy.exc import SQLAlchemyError
 from app.database import db
 from app.models import Booking, Room, User
 
@@ -70,7 +71,11 @@ def create_booking():
 
     booking = Booking(room_id=room.id, user_id=user.id, start_date=start, end_date=end)
     db.session.add(booking)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify({"error": "Could not create booking due to a database error."}), 500
 
     return jsonify({
         "message": "Booking created successfully.",
@@ -84,7 +89,11 @@ def delete_booking(booking_id: int):
         return jsonify({"error": f"Booking {booking_id} not found."}), 404
 
     db.session.delete(booking)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify({"error": "Could not delete booking due to a database error."}), 500
 
     return jsonify({"message": f"Booking {booking_id} deleted successfully."}), 200
 
