@@ -42,7 +42,7 @@ def create_booking():
     if end < start:
         return jsonify({"error": "'end_date' must be on or after 'start_date'."}), 422
 
-    room = db.session.get(Room, data["room_id"])
+    room = Room.query.filter_by(id=data["room_id"]).with_for_update().first()
     if not room:
         return jsonify({"error": f"Room {data['room_id']} not found."}), 404
 
