@@ -40,8 +40,8 @@ def _check_overlap(room_id: int, start: date, end: date, exclude_id: int | None 
 @bookings_bp.route("", methods=["POST"])
 def create_booking():
     data = request.get_json(silent=True)
-    if not data:
-        return jsonify({"error": "Request body must be JSON."}), 400
+    if not isinstance(data, dict):
+        return jsonify({"error": "Request body must be a JSON object."}), 400
 
     missing = [f for f in ("room_id", "user_id", "start_date", "end_date") if f not in data]
     if missing:
