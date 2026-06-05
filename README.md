@@ -39,7 +39,7 @@ web-service/
 ### 1. Configure o ambiente
 
 ```bash
-cp env.example .env
+cp .env.example .env
 ```
 
 O arquivo `.env` vem pré-configurado para Docker — nenhuma alteração necessária para começar:
@@ -197,7 +197,7 @@ web-service/
 ### 1. Configure environment
 
 ```bash
-cp env.example .env
+cp .env.example .env
 ```
 
 The `.env` file comes pre-configured for Docker — no changes needed to get started:
