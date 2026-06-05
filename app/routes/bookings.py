@@ -14,7 +14,7 @@ def _parse_date(value: str, field_name: str) -> date:
         raise ValueError(f"'{field_name}' must be a valid date in YYYY-MM-DD format.")
 
 
-def _parse_int_id(value, field_name: str) -> int:
+def _parse_int(value, field_name: str) -> int:
     if isinstance(value, bool):
         raise ValueError(f"'{field_name}' must be an integer.")
     if isinstance(value, int):
@@ -48,8 +48,8 @@ def create_booking():
         return jsonify({"error": f"Missing required fields: {', '.join(missing)}."}), 400
 
     try:
-        room_id = _parse_int_id(data["room_id"], "room_id")
-        user_id = _parse_int_id(data["user_id"], "user_id")
+        room_id = _parse_int(data["room_id"], "room_id")
+        user_id = _parse_int(data["user_id"], "user_id")
         start = _parse_date(data["start_date"], "start_date")
         end = _parse_date(data["end_date"], "end_date")
     except ValueError as exc:
